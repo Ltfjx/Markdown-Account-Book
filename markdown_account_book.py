@@ -18,7 +18,7 @@ _abname = "Markdown 账本"
 _pagefoot = "![](https://img.shields.io/badge/Generated%20by-MAB-blueviolet)"
 
 # 是否启用0时区转换为8时区(如果本地运行,请关闭)
-_converttz = False
+_converttz = True
 
 # 为统计图表使用黑色字体
 _useBlackText = False

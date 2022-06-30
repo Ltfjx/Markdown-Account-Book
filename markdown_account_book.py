@@ -5,6 +5,9 @@
 
 import datetime
 import sys
+import matplotlib.pyplot as plt
+import numpy
+import os
 
 #----------配置----------
 
@@ -17,7 +20,38 @@ _pagefoot = "![](https://img.shields.io/badge/Generated%20by-MAB-blueviolet)"
 # 是否启用0时区转换为8时区(如果本地运行,请关闭)
 _converttz = False
 
+# 为统计图表使用黑色字体
+_useBlackText = False
+
+# 为统计图表使用透明背景
+_transparentBG = True
+
 #----------配置----------
+
+
+#----------函数----------
+
+def genPie( sizes,explode,labels,name,title ): #饼图生成
+    fig1, ax1 = plt.subplots()
+    ax1.pie(sizes, explode=explode, labels=labels, autopct='%1.1f%%',
+        shadow=False, startangle=90)
+    ax1.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+
+
+    path="./mab_statistics/" # 不存在目录则创建
+
+    isExists = os.path.exists(path)
+    if not isExists:
+        os.makedirs(path)
+
+    plt.title(title)
+
+    try:
+        os.remove(path + name+".png")
+    finally:
+        plt.savefig(path + name+".png", format='png', bbox_inches='tight', transparent=_transparentBG, dpi=600)
+        plt.show()
+#----------函数----------
 
 
 #----------读取文件----------
@@ -72,7 +106,7 @@ except Exception as e:
 
 # 0=时间 1=收支类型 2=操作者 3=分类 4=标签 5=备注 6=金额
 
-#>> 余额
+    #>> 余额
 try:
     Data_TotalMoney = 0
     for i in range(TotalLineNum):
@@ -140,6 +174,55 @@ except Exception as e:
     o_file.write(str(e))
     sys.exit(0)
 #----------数据计算----------
+
+
+#----------统计图生成----------
+
+plt.rcParams['font.family']='SimHei'
+plt.rcParams['axes.unicode_minus']=False
+plt.rcParams['font.size']=13
+plt.rcParams['text.color'] = 'white' # 深色即是正义1111
+if _useBlackText == True:
+    plt.rcParams['text.color'] = 'black' # 浅色是异类11111111
+
+#>> 标签收入
+j=0
+Data_tag_rm0 = Data_tag # 去除0数据行
+for i in range(TotalTagNum):
+    if Data_tag[i][2]==0:
+        Data_tag_rm0 = numpy.delete(Data_tag_rm0, i-j, axis=0)
+        j=j+1
+
+for i in range(len(Data_tag_rm0)):
+    Data_tag_rm0[i][0] = Data_tag_rm0[i][0] + "(" +Data_tag_rm0[i][2]+"CNY)"
+
+sizes = [abs(number) for number in numpy.array(list(map(list,zip(*Data_tag_rm0))))[2].astype(float)] # 交换横纵轴，转换数据类型，取绝对值
+explode = [0 for i in range(len(sizes))] 
+labels = list(map(list,zip(*Data_tag_rm0)))[0] # 交换横纵轴
+name = "TagIn"
+
+genPie(sizes,explode,labels,name,"标签收入统计")
+
+#>> 标签支出
+j=0
+Data_tag_rm0 = Data_tag # 去除0数据行
+for i in range(TotalTagNum):
+    if Data_tag[i][3]==0:
+        Data_tag_rm0 = numpy.delete(Data_tag_rm0, i-j, axis=0)
+        j=j+1
+
+for i in range(len(Data_tag_rm0)):
+    Data_tag_rm0[i][0] = Data_tag_rm0[i][0] + "(" +Data_tag_rm0[i][3]+"CNY)"
+
+sizes = [abs(number) for number in numpy.array(list(map(list,zip(*Data_tag_rm0))))[3].astype(float)] # 交换横纵轴，转换数据类型，取绝对值
+explode = [0 for i in range(len(sizes))] 
+labels = list(map(list,zip(*Data_tag_rm0)))[0] # 交换横纵轴
+name = "TagOut"
+
+genPie(sizes,explode,labels,name,"标签支出统计")
+
+
+#----------统计图生成----------
 
 
 #----------Markdown输出----------
